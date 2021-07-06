@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/util
+       https://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <import resource="services.xml" />
+
+    <beans>
+        <bean id="dog" class="homework1.task1.Animal" name="dog"/>
+        <bean id="cat" class="homework1.task1.Animal" name="cat">
+            <property name="name" value="Kot"/>
+            <property name="age" value="3"/>
+            <property name="tail" value="true"/>
+        </bean>
+        <bean id="eagle" class="homework1.task1.Animal" name="eagle">
+            <lookup-method bean="eagle"/>
+        </bean>
+
+    </beans>
+
+</beans>
