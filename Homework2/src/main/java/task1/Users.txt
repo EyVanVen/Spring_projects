@@ -1,0 +1,2 @@
+User{name='SCP', surname='d3w', age=23}
+User{name='Ivan', surname='sd', age=432}
