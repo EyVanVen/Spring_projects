@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.app.*"/>
+
+    <tx:annotation-driven transaction-manager="txManager"/>
+    <jpa:repositories base-package="com.app.dao.repositories"
+                      entity-manager-factory-ref="entityManagerFactory" transaction-manager-ref="txManager"/>
+
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalEntityManagerFactoryBean">
+        <property name="persistenceUnitName" value="userProject"/>
+    </bean>
+    <bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+
+    <bean id="myLogger" class="com.app.aspects.MyLogger"/>
+    <bean id="securityAspect" class="com.app.aspects.SecurityAspect"/>
+
+    <bean id="userAuthorized" class="com.app.authorize.Authorization" scope="session" lazy-init="false">
+        <property name="authorized" value="false"/>
+    </bean>
+
+    <aop:config>
+        <aop:pointcut id="authorizationControllerPointCut" expression="execution(* com.app.controllers.AuthorizationController.*(..))"/>
+
+        <aop:aspect ref="securityAspect" id="securityChecker">
+            <aop:before method="checkAuthorize"
+                        pointcut="execution(* com.app.controllers.AuthorizationController.*(..))
+                        &amp;&amp; !execution(* com.app.controllers.AuthorizationController.login(..))
+                        &amp;&amp; !execution(* com.app.controllers.AuthorizationController.logout(..))" />
+        </aop:aspect>
+
+        <aop:aspect ref="myLogger" id="myAspect">
+            <aop:before method="beforeMethodInvocation" pointcut-ref="authorizationControllerPointCut" />
+            <aop:after method="afterMethodInvocation" pointcut="execution(* com.app.dao.repositories.UserRepository.*(..))" />
+            <aop:after-throwing method="afterThrowing" throwing="ex"
+                                pointcut="within(@org.springframework.web.bind.annotation.RequestMapping *)"/>
+        </aop:aspect>
+    </aop:config>
+
+    <cache:annotation-driven/>
+    <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
+        <property name="caches">
+            <set>
+                <bean id="listCache" class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" />
+                <bean id="singleCache" class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" />
+            </set>
+        </property>
+    </bean>
+</beans>
